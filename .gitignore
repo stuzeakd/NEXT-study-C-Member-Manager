@@ -1,0 +1,10 @@
+*.sdf
+*.opensdf
+*.sln
+*.suo
+*.vcxproj
+*.filters
+*.ilk
+*.pdb
+
+Project1/Debug/
