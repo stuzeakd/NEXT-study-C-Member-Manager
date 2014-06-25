@@ -31,7 +31,7 @@ int main(void){
 	getMember(member, dataFile);
 
 	while (state != QUIT){
-		state = (enum mainOption)startMessage();
+		state = (enum mainOption)startMessage((int)state);
 
 		switch (state){
 		case PRINT:

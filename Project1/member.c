@@ -11,16 +11,16 @@
 #include "BST.h"
 #include "UI.h"
 
-#define BUF 255
-#define PRINTFORM "  %d | %-10s\t%-15s\t%-30s\n"
-#define SAVEFORM "%d\t%s\t%s\t%s\n"
-
+enum subOption { ID, NAME, PHONE, CANCEL };
+enum subOptionOfEdit { EDITNAME, EDITADDRESS, EDITPHONE, EDITCANCEL};
 /************************************************************************/
 /* Utility                                                              */
 /*                                                                      */
 /*                                                                      */
 /************************************************************************/
-
+void fflushStdin(){
+	while (getchar() != '\n');
+}
 int newlineToNull(char* str){
 	int n = strlen(str);
 	if (n > 0 && (str[n - 1] == '\n' || str[n - 1] == '\r')){
@@ -36,7 +36,7 @@ int isNumber(char ch){
 		return 0;
 }
 int isValidName(char* str){
-	
+	if (strlen(str)==0 || strlen(str)>10) return 0;
 	for (; *str != '\0' ; str++) {
 		if (isNumber(*str)) return 0;
 	}
@@ -87,11 +87,11 @@ void applyMapSave(void *pvValue, void *pvExtra, FILE *fp){
 /* Make Member list from rawdata                                        */
 /************************************************************************/
 void getMember(BST oBST, FILE *dataFile){
-	char buf[BUF];
+	char buf[FILEBUF];
 	char *token;
 	Value *value;
-	fgets(buf, BUF, dataFile);
-	while (fgets(buf, BUF, dataFile)){
+	fgets(buf, FILEBUF, dataFile);
+	while (fgets(buf, FILEBUF, dataFile)){
 		newlineToNull(buf);
 
 		value = (Value*)malloc(sizeof(Value));
@@ -176,8 +176,22 @@ void registerMember(BST oBST){
 /* Delete a member                                                      */
 /************************************************************************/
 void deleteMember(BST oBST){
-	deleteMessage();
-	getchar();
+	enum subOption state = ID;
+	while (state != CANCEL){
+		state = (enum subOption) deleteMessage((int)state);
+		switch (state){
+		case ID:
+			break;
+		case NAME:
+			break;
+		case PHONE:
+			break;
+		case CANCEL:
+			break;
+		default:
+			wrongMessage();
+		}
+	}
 }
 
 /************************************************************************/
@@ -185,9 +199,90 @@ void deleteMember(BST oBST){
 /*                                                                      */
 /* Edit a member data                                                   */
 /************************************************************************/
+int editMemberValue(void *selectedValue){
+	char buf[BUF];
+	enum SubOptionOfEdit state = EDITNAME;
+	state = (enum subOptionOfEdit) editValueMessage(selectedValue, (int)state);
+		
+	switch (state){
+	case EDITNAME:
+		editForm((int)state);
+		fgets(buf, BUF, stdin);
+		newlineToNull(buf);
+		while (!isValidName(buf)){
+			editForm((int)state);
+			invalidInput();
+			editForm((int)state);
+			fgets(buf, BUF, stdin);
+			newlineToNull(buf);
+		}
+		strcpy(((Value*)selectedValue)->name, buf);
+		break;
+
+	case EDITADDRESS:
+		editForm((int)state);
+		fgets(buf, BUF, stdin);
+		newlineToNull(buf);
+		strcpy(((Value*)selectedValue)->address, buf);
+		break;
+
+	case EDITPHONE:
+		editForm((int)state);
+		fgets(buf, BUF, stdin);
+		newlineToNull(buf);
+		do{
+			editForm((int)state);
+			invalidInput();
+			editForm((int)state);
+			fgets(buf, BUF, stdin);
+			newlineToNull(buf);
+		} while (!isValidPhone(buf));
+		strcpy(((Value*)selectedValue)->phone, buf);
+		break;
+
+	case EDITCANCEL:
+		break;
+	default:
+		wrongMessage();
+
+	}
+	return (int)state;
+}
 void editMember(BST oBST){
-	editMessage();
-	getchar();
+	enum subOption state = ID;
+	enum subOptionOfEdit substate = NAME;
+	int key;
+	char buf[BUF];
+	Value *selectedValue;
+
+	while (state != CANCEL){
+		state = (enum subOption)editMessage((int)state);
+
+		switch (state){
+		case ID:
+			printf("ID : ");
+
+			fgets(buf, BUF, stdin);
+			newlineToNull(buf);
+			key = atoi(buf);
+
+			selectedValue = getValueFromNode(oBST->root, key);
+			if (!selectedValue) mismatchmMessage();
+			else {
+				substate = (enum substate)editMemberValue(selectedValue);
+				if (substate != EDITCANCEL) state = CANCEL;
+			}
+			break;
+		case NAME:
+			break;
+		case PHONE:
+			break;
+		case CANCEL:
+			break;
+		default:
+			wrongMessage();
+		}
+	}
 }
 
 /************************************************************************/
@@ -196,9 +291,28 @@ void editMember(BST oBST){
 /* Search a member                                                      */
 /************************************************************************/
 void searchMember(BST oBST){
-	searchMessage();
-	getchar();
-
+	enum subOption state = ID;
+	while (state != CANCEL){
+		state = (enum subOption)searchMessage((int)state);
+		switch (state){
+		case ID:
+			printf("ID!!! %d", state);
+			getchar();
+			break;
+		case NAME:
+			printf("NAME!!! %d", state);
+			getchar();
+			break;
+		case PHONE:
+			printf("PHONE!!! %d", state);
+			getchar();
+			break;
+		case CANCEL:
+			break;
+		default:
+			wrongMessage();
+		}
+	}
 }
 
 /************************************************************************/

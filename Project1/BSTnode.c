@@ -41,6 +41,30 @@ void insertNode(Node **node, void *pvValue){
 		else insertNode(&((*node)->rightchild), pvValue);
 	}
 }
+void* getValueFromNode(Node* node, int iKey){
+	if (!node) return NULL;
+	if (node->value->key == iKey) return node->value;
+	else if (node->value->key > iKey) return getValueFromNode(node->leftchild, iKey);
+	else return getValueFromNode(node->rightchild, iKey);
+}
+
+Node* searchNodeKey(Node *node, int iKey){
+	if (!node) return NULL;
+	if (node->value->key == iKey) return node;
+	else if (node->value->key > iKey) return searchNodeKey(node->leftchild, iKey);
+	else return searchNodeKey(node->rightchild, iKey);
+}
+
+void searchNodeValue(Node *node, Node* nodearr[], int *nodearrSize,int *compare(void* pvValue, char* pcData), char* pcData){
+	if (node == NULL) return;
+	
+	if (node->leftchild != NULL)
+		searchNodeValue(node->leftchild, nodearr, nodearrSize, compare, pcData);
+	if (!compare(node->value, pcData)) nodearr[*nodearrSize++] = node;
+	if (node->rightchild != NULL)
+		searchNodeValue(node->rightchild, nodearr, nodearrSize, compare, pcData);
+
+}
 
 void mapNode(Node *node, void(*pfApply)(void *pvValue, void *pvExtra, FILE *fp), void *pvExtra, FILE *fp){
 	if (node == NULL) return;
