@@ -17,7 +17,7 @@
 
 #define BUF 35
 #define FILEBUF 255
-#define PRINTFORM "  %d | %-8s%-35s%-15s\n"
+#define PRINTFORM "    %d | %-8s| %-35s| %-15s\n"
 #define SAVEFORM "%d\t%s\t%s\t%s\n"
 
 void getMember(BST oBST, FILE *dataFile);

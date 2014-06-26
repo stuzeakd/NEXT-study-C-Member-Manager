@@ -20,13 +20,15 @@ typedef struct node{
 	Value *value;
 	struct node *leftchild;
 	struct node *rightchild;
+	struct node *parent;
 }Node;
 
+Node* leftMostNode(Node *node);
 Node* rightMostNode(Node *node);
 
+void freeValue(Value* value);
 void freeNode(Node *node);
-void insertNode(Node *node, void *pvValue);
-void removeNode(Node *node, int iKey);
+Node* getNode(Node *node, int iKey);
 void* getValueFromNode(Node* node, int iKey);
 void getValueFromValue(Node *node, Value* valueArr[], int valueArrSize, int *compare(void* pvValue, void* pvData), void* pvData);
 void mapNode(Node *node, void(*pfApply)(void *pvValue, void *pvExtra, FILE *fp), void *pvExtra, FILE *fp);

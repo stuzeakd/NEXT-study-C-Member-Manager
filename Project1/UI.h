@@ -16,6 +16,11 @@
 #define SHAPE_HORIZCURSOR		"▲"
 #define SHAPE_VERTICURSOR		"▶"
 
+#define REGIMENU_0				"ID"
+#define REGIMENU_1				"이름"
+#define REGIMENU_2				"주소"
+#define REGIMENU_3				"전화번호"
+
 #define SUBMENU_1				"ID"
 #define SUBMENU_2				"이름"
 #define SUBMENU_3				"전화번호"
@@ -33,6 +38,8 @@
 #define ERASE					"              "
 
 #define SPACE_BETWEEN_CURSOR	4
+#define SPACE_BETWEEN_REGISTER_EACHVALUEDATA 2
+
 #define SPACE_BETWEEN_EDIT_EACHVALUEDATA 2
 #define SPACE_BETWEEN_EDIT_EACHVALUES 3
 #define SPACE_BETWEEN_END_MENU	10
@@ -49,9 +56,12 @@
 #define SUBMENU_MAIN_X_POS		30
 #define SUBMENU_MAIN_Y_POS		5
 
+#define REGISTER_X_POS		20
+#define REGISTER_Y_POS		5
 #define END_X_POS			
 #define END_Y_POS			7
 
+#define VERTIMOVE_REGI		4
 #define HORIZMOVE_START		10
 #define VERTIMOVE_DELETE	2
 #define VERTIMOVE_EDIT		2
@@ -68,6 +78,7 @@
 #define FORM_PRINT_SELECTED_VALUES_1 "%d | %-10s | %-15s"
 #define FORM_PRINT_SELECTED_VALUES_2 "%-35s"
 
+#define MESSAGE_REGISTERFINISH		"등록되었습니다. <ENTER>"
 #define MESSAGE_REMOVEFINISH		"삭제되었습니다. <ENTER>"
 #define MESSAGE_SAVE				"저장되었습니다. <ENTER>"
 #define MESSAGE_END_BEFORE_SAVE		"저장하고 종료하시겠습니까?"
@@ -105,6 +116,7 @@ int		quitMessage();
 
 void mismatchmMessage();
 void invalidInputMessage();
+void registerFinishMessage();
 void removeFinishMessage();
 
 

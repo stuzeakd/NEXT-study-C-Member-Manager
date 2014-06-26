@@ -175,12 +175,29 @@ void getMessage(){
 void printMessage(){
 	system("cls");
 	mainMenu(1);
-
+	printf("학번 | 이름    |               주소                 | 전화번호\n");
 
 }
+void registerForm(int state){
+	//해당 Value Data 위치를 비워준후 커서를 맨앞으로 이동.
+	Point pos = { REGISTER_X_POS+INDENT_EACHVALUEDATA, REGISTER_Y_POS
+		+ state*VERTIMOVE_REGI + SPACE_BETWEEN_REGISTER_EACHVALUEDATA };
+	gotoxy(pos); printf(ERASE); printf(ERASE); printf(ERASE);
+	gotoxy(pos);
+}
 void registerMessage(){
+	Point pos = { REGISTER_X_POS, REGISTER_Y_POS };
 	system("cls");
 	mainMenu(2);
+	printf("학생데이터를 입력하세요");
+	gotoxy(pos); printf(REGIMENU_0);
+	pos.y += VERTIMOVE_REGI; gotoxy(pos); printf(REGIMENU_1);
+	pos.y += VERTIMOVE_REGI; gotoxy(pos); printf(REGIMENU_2);
+	pos.y += VERTIMOVE_REGI; gotoxy(pos); printf(REGIMENU_3);
+	pos.x += INDENT_EACHVALUEDATA; pos.y = REGISTER_Y_POS + SPACE_BETWEEN_REGISTER_EACHVALUEDATA;
+	gotoxy(pos);
+	
+
 
 }
 int selectValueMessage(Value *selectedValues[], int selectedValuesSize){
@@ -422,6 +439,23 @@ void byeMessage(){
 	pos.x = (strlen(WIDTHUP) - strlen(MESSAGE_BYE)) / 2; gotoxy(pos); printf(MESSAGE_BYE);
 	SetConsoleTextAttribute(hC, 7);
 }
+void registerFinishMessage(){
+	HANDLE hC = GetStdHandle(STD_OUTPUT_HANDLE);
+	CONSOLE_SCREEN_BUFFER_INFO csbi;
+	GetConsoleScreenBufferInfo(hC, &csbi);
+	Point pos = { 0, 23 };
+	int i;
+
+	SetConsoleTextAttribute(hC, 151);
+	gotoxy(pos); for (i = 0; i <= strlen(WIDTHUP); i++){
+		Sleep(animationSleep(i));
+		printf(" ");
+	}
+	pos.x = (strlen(WIDTHUP) - strlen(MESSAGE_REGISTERFINISH)) / 2; gotoxy(pos); printf(MESSAGE_REGISTERFINISH);
+	SetConsoleTextAttribute(hC, 7);
+	getchar();
+}
+
 void removeFinishMessage(){
 	HANDLE hC = GetStdHandle(STD_OUTPUT_HANDLE);
 	CONSOLE_SCREEN_BUFFER_INFO csbi;

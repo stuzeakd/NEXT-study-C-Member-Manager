@@ -13,6 +13,7 @@
 
 enum subOption { ID, NAME, PHONE, CANCEL };
 enum subOptionOfEdit { EDITNAME, EDITADDRESS, EDITPHONE, EDITCANCEL};
+enum registerOption {REGIID, REGINAME, REGIADDRESS, REGIPHONE};
 enum quitOption {YES, NO};
 /************************************************************************/
 /* Utility                                                              */
@@ -37,7 +38,10 @@ int isNumber(char ch){
 		return 0;
 }
 int isValidName(char* str){
-	if (strlen(str)==0 || strlen(str)>10) return 0;
+	if (strlen(str) == 0 || strlen(str) > 10){
+		
+		return 0;
+	}
 	for (; *str != '\0' ; str++) {
 		if (isNumber(*str)) return 0;
 	}
@@ -144,40 +148,50 @@ void printMember(BST oBST){
 void registerMember(BST oBST){
 	Value *pValue;
 	char buf[BUF];
-
+	enum subOptionEdit state = REGIID;
 	registerMessage();
 	//initial
 	pValue = (Value*)malloc(sizeof(Value));
 	pValue->key = (rightMostNode(oBST->root)->value->key) + 1;
-	printf("ID\t: %d\n", pValue->key);
-
-	//Name input.
-	printf("Name\t: ");
-	do{
+	printf("%d", pValue->key);
+	
+	state = REGINAME;
+	registerForm((int)state);
+	fgets(buf, BUF, stdin);
+	newlineToNull(buf);
+	while (!isValidName(buf)){
+		registerForm((int)state);
+		invalidInputMessage();
+		registerForm((int)state);
 		fgets(buf, BUF, stdin);
 		newlineToNull(buf);
-	}while (!isValidName(buf));
+	}
 	pValue->name = (char*)malloc(strlen(buf) + 1);
 	strcpy(pValue->name, buf);
-
-	//Address input.
-	printf("Address\t: ");
+	
+	state = REGIADDRESS;
+	registerForm((int)state);
 	fgets(buf, BUF, stdin);
 	newlineToNull(buf);
 	pValue->address = (char*)malloc(strlen(buf) + 1);
 	strcpy(pValue->address, buf);
-
-	//Phone input.
-	printf("Phone\t: ");
-	do{
+	
+	state = REGIPHONE;
+	registerForm((int)state);
+	fgets(buf, BUF, stdin);
+	newlineToNull(buf);
+	while (!isValidPhone(buf)){
+		registerForm((int)state);
+		invalidInputMessage();
+		registerForm((int)state);
 		fgets(buf, BUF, stdin);
 		newlineToNull(buf);
-	}while (!isValidPhone(buf));
+	}
 	pValue->phone = (char*)malloc(strlen(buf) + 1);
 	strcpy(pValue->phone, buf);
 
 	BST_insert(oBST, pValue);
-	getchar();
+	registerFinishMessage();
 }
 
 /************************************************************************/
@@ -209,6 +223,7 @@ void deleteMember(BST oBST){
 			else {
 				BST_remove(oBST, selectedValue->key);
 				removeFinishMessage();
+				state = CANCEL;
 			}
 			break;
 		case NAME:
@@ -222,6 +237,7 @@ void deleteMember(BST oBST){
 				if (selectedValuesSize != 1) selectedValueNum = selectValueMessage(selectedValues, selectedValuesSize);
 				BST_remove(oBST, selectedValues[selectedValueNum]->key);
 				removeFinishMessage();
+				state = CANCEL;
 			}
 			break;
 		case PHONE:
@@ -235,6 +251,7 @@ void deleteMember(BST oBST){
 				if (selectedValuesSize != 1) selectedValueNum = selectValueMessage(selectedValues, selectedValuesSize);
 				BST_remove(oBST, selectedValues[selectedValueNum]->key);
 				removeFinishMessage();
+				state = CANCEL;
 			}
 			break;
 		case CANCEL:
@@ -281,13 +298,13 @@ int editMemberValue(void *selectedValue){
 		editForm((int)state);
 		fgets(buf, BUF, stdin);
 		newlineToNull(buf);
-		do{
+		while (!isValidPhone(buf)){
 			editForm((int)state);
 			invalidInputMessage();
 			editForm((int)state);
 			fgets(buf, BUF, stdin);
 			newlineToNull(buf);
-		} while (!isValidPhone(buf));
+		};
 		strcpy(((Value*)selectedValue)->phone, buf);
 		break;
 
