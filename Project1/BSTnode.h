@@ -26,8 +26,8 @@ Node* rightMostNode(Node *node);
 
 void freeNode(Node *node);
 void insertNode(Node *node, void *pvValue);
+void removeNode(Node *node, int iKey);
 void* getValueFromNode(Node* node, int iKey);
-Node* searchNodeKey(Node *node, int iKey);
-void searchNodeValue(Node *node, Node* nodearr[], int *nodearrSize, int *compare(void* pvValue, char* pcData), char* pcData);
+void getValueFromValue(Node *node, Value* valueArr[], int valueArrSize, int *compare(void* pvValue, void* pvData), void* pvData);
 void mapNode(Node *node, void(*pfApply)(void *pvValue, void *pvExtra, FILE *fp), void *pvExtra, FILE *fp);
 #endif

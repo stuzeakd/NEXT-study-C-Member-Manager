@@ -6,6 +6,7 @@
 *.filters
 *.ilk
 *.pdb
+*.txt
 Project1/*.txt
 
 Project1/Debug/

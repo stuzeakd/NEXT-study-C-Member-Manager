@@ -27,11 +27,15 @@ void	BST_replace(BST oBST, int iKey, int *compare(void *pvValue, void *pvData), 
 
 }
 void	BST_remove(BST oBST, int iKey){
-
-
+	removeNode(oBST->root, iKey);
 }
-void*	BST_get_value(BST oBST, int iKey){
+void*	BST_get_value_from_key(BST oBST, int iKey){
 	return getValueFromNode(oBST->root, iKey);
+}
+int	BST_get_value_from_value(BST oBST, Value *valueArr[], int *compare(void *pvValue, void *pvData), void *pvData){
+	int arrSize = 0;
+	getValueFromValue(oBST->root, valueArr, &arrSize, compare, pvData);
+	return arrSize;
 }
 Node*	BST_search_key(BST oBST, int iKey){
 	return searchNodeKey(oBST->root, iKey);

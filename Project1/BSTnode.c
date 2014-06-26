@@ -11,18 +11,28 @@
 
 Node* rightMostNode(Node *node){
 	Node *temp;
-
+	if (!node) return NULL;
 	for (temp = node; temp->rightchild != NULL; temp = temp->rightchild){
-		printf("%d %s\n", temp->value->key, temp->value->name);
+		//printf("%d %s\n", temp->value->key, temp->value->name);
 	}
 
 	return temp;
+}
+
+void freeValue(Value* value){
+	if (value != NULL){
+		free(value->name);
+		free(value->address);
+		free(value->phone);
+		free(value);
+	}
 }
 
 void freeNode(Node *node){
 	if (node != NULL){
 		freeNode(node->leftchild);
 		freeNode(node->rightchild);
+		freeValue(node->value);
 		free(node);
 	}
 }
@@ -41,13 +51,35 @@ void insertNode(Node **node, void *pvValue){
 		else insertNode(&((*node)->rightchild), pvValue);
 	}
 }
+void removeNode(Node *node, int iKey){
+	Node **tmpNode = NULL;
+	Node *freeNode;
+	if (node->value->key == iKey) {
+		freeValue(node->value);
+		if (node->leftchild) {
+			*tmpNode = rightMostNode(node->leftchild);
+			node->value = (*tmpNode)->value;
+			freeNode = *tmpNode;
+			*tmpNode = NULL;
+			free(freeNode);
+		}
+	}
+}
 void* getValueFromNode(Node* node, int iKey){
 	if (!node) return NULL;
 	if (node->value->key == iKey) return node->value;
 	else if (node->value->key > iKey) return getValueFromNode(node->leftchild, iKey);
 	else return getValueFromNode(node->rightchild, iKey);
 }
+void getValueFromValue(Node *node, Value* valueArr[], int *valueArrSize, int *compare(void* pvValue, void* pvData), void* pvData){
+	if (!node) return;
 
+	getValueFromValue(node->leftchild, valueArr, valueArrSize, compare, pvData);
+	if (!compare(node->value, pvData)) valueArr[(*valueArrSize)++] = node->value;
+	getValueFromValue(node->rightchild, valueArr, valueArrSize, compare, pvData);
+
+
+}
 Node* searchNodeKey(Node *node, int iKey){
 	if (!node) return NULL;
 	if (node->value->key == iKey) return node;

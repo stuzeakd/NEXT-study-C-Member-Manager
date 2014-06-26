@@ -13,6 +13,7 @@
 
 enum subOption { ID, NAME, PHONE, CANCEL };
 enum subOptionOfEdit { EDITNAME, EDITADDRESS, EDITPHONE, EDITCANCEL};
+enum quitOption {YES, NO};
 /************************************************************************/
 /* Utility                                                              */
 /*                                                                      */
@@ -79,8 +80,17 @@ void applyMapSave(void *pvValue, void *pvExtra, FILE *fp){
 	char *pcExtra = (char*)pvExtra;
 	fprintf(fp, pcExtra, pValue->key, pValue->name, pValue->address, pValue->phone);
 }
-
-
+int compareName(void *pvValue, void *pvData){
+	Value *pValue = (Value*)pvValue;
+	char *pcData = (char*)pvData;
+	return strcmp(pValue->name, pcData);
+}
+int comparePhone(void *pvValue, void *pvData){
+	Value *pValue = (Value*)pvValue;
+	char *pcData = (char*)pvData;
+	return strcmp(pValue->phone, pcData);
+}
+ 
 /************************************************************************/
 /* Get Member                                                           */
 /*                                                                      */
@@ -177,14 +187,55 @@ void registerMember(BST oBST){
 /************************************************************************/
 void deleteMember(BST oBST){
 	enum subOption state = ID;
+	enum subOptionOfEdit substate = NAME;
+	int key;
+	int selectedValuesSize;
+	int selectedValueNum = 0;
+	char buf[BUF];
+	Value *selectedValue;
+	Value *selectedValues[BUF];
 	while (state != CANCEL){
 		state = (enum subOption) deleteMessage((int)state);
 		switch (state){
 		case ID:
+			printf("ID : ");
+
+			fgets(buf, BUF, stdin);
+			newlineToNull(buf);
+			key = atoi(buf);
+
+			selectedValue = getValueFromNode(oBST->root, key);
+			if (!selectedValue) mismatchmMessage();
+			else {
+				BST_remove(oBST, selectedValue->key);
+				removeFinishMessage();
+			}
 			break;
 		case NAME:
+			printf("NAME : ");
+
+			fgets(buf, BUF, stdin);
+			newlineToNull(buf);
+			selectedValuesSize = BST_get_value_from_value(oBST, selectedValues, compareName, buf);
+			if (!selectedValuesSize) mismatchmMessage();
+			else{
+				if (selectedValuesSize != 1) selectedValueNum = selectValueMessage(selectedValues, selectedValuesSize);
+				BST_remove(oBST, selectedValues[selectedValueNum]->key);
+				removeFinishMessage();
+			}
 			break;
 		case PHONE:
+			printf("PHONE : ");
+
+			fgets(buf, BUF, stdin);
+			newlineToNull(buf);
+			selectedValuesSize = BST_get_value_from_value(oBST, selectedValues, comparePhone, buf);
+			if (!selectedValuesSize) mismatchmMessage();
+			else{
+				if (selectedValuesSize != 1) selectedValueNum = selectValueMessage(selectedValues, selectedValuesSize);
+				BST_remove(oBST, selectedValues[selectedValueNum]->key);
+				removeFinishMessage();
+			}
 			break;
 		case CANCEL:
 			break;
@@ -211,7 +262,7 @@ int editMemberValue(void *selectedValue){
 		newlineToNull(buf);
 		while (!isValidName(buf)){
 			editForm((int)state);
-			invalidInput();
+			invalidInputMessage();
 			editForm((int)state);
 			fgets(buf, BUF, stdin);
 			newlineToNull(buf);
@@ -232,7 +283,7 @@ int editMemberValue(void *selectedValue){
 		newlineToNull(buf);
 		do{
 			editForm((int)state);
-			invalidInput();
+			invalidInputMessage();
 			editForm((int)state);
 			fgets(buf, BUF, stdin);
 			newlineToNull(buf);
@@ -252,8 +303,11 @@ void editMember(BST oBST){
 	enum subOption state = ID;
 	enum subOptionOfEdit substate = NAME;
 	int key;
+	int selectedValuesSize;
+	int selectedValueNum = 0;
 	char buf[BUF];
 	Value *selectedValue;
+	Value *selectedValues[BUF];
 
 	while (state != CANCEL){
 		state = (enum subOption)editMessage((int)state);
@@ -274,8 +328,30 @@ void editMember(BST oBST){
 			}
 			break;
 		case NAME:
+			printf("NAME : ");
+
+			fgets(buf, BUF, stdin);
+			newlineToNull(buf);
+			selectedValuesSize = BST_get_value_from_value(oBST, selectedValues, compareName, buf);
+			if (!selectedValuesSize) mismatchmMessage();
+			else{
+				if (selectedValuesSize != 1) selectedValueNum = selectValueMessage(selectedValues, selectedValuesSize);
+				substate = (enum substate)editMemberValue(selectedValues[selectedValueNum]);
+				if (substate != EDITCANCEL) state = CANCEL;
+			}
 			break;
 		case PHONE:
+			printf("PHONE : ");
+
+			fgets(buf, BUF, stdin);
+			newlineToNull(buf);
+			selectedValuesSize = BST_get_value_from_value(oBST, selectedValues, comparePhone, buf);
+			if (!selectedValuesSize) mismatchmMessage();
+			else{
+				if (selectedValuesSize != 1) selectedValueNum = selectValueMessage(selectedValues, selectedValuesSize);
+				substate = (enum substate)editMemberValue(selectedValues[selectedValueNum]);
+				if (substate != EDITCANCEL) state = CANCEL;
+			}
 			break;
 		case CANCEL:
 			break;
@@ -292,20 +368,48 @@ void editMember(BST oBST){
 /************************************************************************/
 void searchMember(BST oBST){
 	enum subOption state = ID;
+	int key;
+	int selectedValuesSize;
+	int selectedValueNum = 0;
+	char buf[BUF];
+	Value *selectedValues[BUF];
 	while (state != CANCEL){
 		state = (enum subOption)searchMessage((int)state);
 		switch (state){
 		case ID:
-			printf("ID!!! %d", state);
-			getchar();
+			printf("ID : ");
+
+			fgets(buf, BUF, stdin);
+			newlineToNull(buf);
+			key = atoi(buf);
+
+			selectedValues[0] = getValueFromNode(oBST->root, key);
+			if (!selectedValues[0]) mismatchmMessage();
+			else {
+				printSearchResult(selectedValues, 1);
+			}
 			break;
 		case NAME:
-			printf("NAME!!! %d", state);
-			getchar();
+			printf("NAME : ");
+			fgets(buf, BUF, stdin);
+			newlineToNull(buf);
+
+			selectedValuesSize = BST_get_value_from_value(oBST, selectedValues, compareName, buf);
+			if (!selectedValuesSize) mismatchmMessage();
+			else{
+				printSearchResult(selectedValues, selectedValuesSize);
+			}
 			break;
 		case PHONE:
-			printf("PHONE!!! %d", state);
-			getchar();
+			printf("PHONE : ");
+			fgets(buf, BUF, stdin);
+			newlineToNull(buf);
+
+			selectedValuesSize = BST_get_value_from_value(oBST, selectedValues, comparePhone, buf);
+			if (!selectedValuesSize) mismatchmMessage();
+			else{
+				printSearchResult(selectedValues, selectedValuesSize);
+			}
 			break;
 		case CANCEL:
 			break;
@@ -321,13 +425,12 @@ void searchMember(BST oBST){
 /* Save all member list to dataFile                                     */
 /************************************************************************/
 void saveMember(BST oBST){
-	saveMessage();
 	FILE *writeFile;
 	writeFile = fopen("out.txt", "wt");
 	fprintf(writeFile, "회원 아이디\t회원이름\t회원주소\t핸드폰 번호\n");
 	BST_map(oBST, applyMapSave, SAVEFORM, writeFile);
 	fclose(writeFile);
-	getchar();
+	saveMessage();
 }
 
 /************************************************************************/
@@ -336,8 +439,18 @@ void saveMember(BST oBST){
 /* Quit the member program                                              */
 /************************************************************************/
 void quitMember(BST oBST){
-	quitMessage();
+	enum quitOption state;
+
+	state = (enum quitOption)quitMessage();
+	switch (state){
+	case YES:
+		saveMember(oBST);
+		break;
+	case NO:
+		break;
+	}
 	BST_free(oBST);
+	byeMessage();
 	getchar();
 }
 

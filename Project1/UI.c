@@ -1,5 +1,4 @@
 #include "UI.h"
-#include "BSTnode.h"
 
 char *mainOptionStr[] = {
 	"  보기  "
@@ -16,8 +15,11 @@ void gotoxy(Point pos){
 	Cur.X = pos.x;
 	Cur.Y = pos.y;
 	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), Cur);
-
 }
+int animationSleep(int xPos){
+	return (xPos - 35)*(xPos - 35)/ 150;
+}
+//세로로 이동하는 Cursor로 메뉴 선택후 위치에 해당하는 option 리턴.
 int cursorPosVerti(Point std, int range, int interval, int state){
 	int opt = state;
 	char ch = 0;
@@ -44,6 +46,7 @@ int cursorPosVerti(Point std, int range, int interval, int state){
 	}
 	return opt;
 }
+//가로로 이동하는 Cursor로 메뉴 선택후 위치에 해당하는 option 리턴.
 int cursorPosHoriz(Point std, int range, int interval, int state){
 	int opt = state;
 	char ch = 0;
@@ -86,30 +89,32 @@ void printCenter(char *str){
 	printf("\n");
 }
 
+//상단 메인 메뉴바.
 void mainMenu(int select){
 	HANDLE hC = GetStdHandle(STD_OUTPUT_HANDLE);
 	CONSOLE_SCREEN_BUFFER_INFO csbi;
-	Point pos = { 6, 1 };
+	Point pos = { 0,0 };
 	int i;
 	GetConsoleScreenBufferInfo(hC, &csbi);
 
-
+	gotoxy(pos);
 	printf(WIDTHUP);
 	printf("\n    │        │        │        │        │        │        │        │   \n");
 	printf(WIDTHDOWN);
 
+	pos.x = 6; pos.y = 1;
 	SetConsoleTextAttribute(hC, 14);
 	for (i = 0; i < 7; i++){
 		gotoxy(pos);
-		pos.x = pos.x + 10;
+		pos.x = pos.x + HORIZMOVE_START;
 		printf("%s", mainOptionStr[i]);
 	}
 
 	SetConsoleTextAttribute(hC, 31);
 	if (select != 0){
-		pos.x = 6 + (select-1) * 10;
+		pos.x = 6 + (select - 1) * HORIZMOVE_START;
 		gotoxy(pos);
-		printf("%s", mainOptionStr[select - 1 ]);
+		printf("%s", mainOptionStr[select - 1]);
 
 	}
 	SetConsoleTextAttribute(hC, 7);
@@ -118,6 +123,16 @@ void mainMenu(int select){
 	gotoxy(pos);
 }
 
+//Form에 맞춰 Value Data출력
+void printSelectedValue(Point pos, Value *selectedValues[], int selectedValuesSize){
+	int i;
+	for (i = 0; i < selectedValuesSize; i++){
+		gotoxy(pos); printf(FORM_PRINT_SELECTED_VALUES_1, selectedValues[i]->key, selectedValues[i]->name, selectedValues[i]->phone);
+		pos.y++; 
+		gotoxy(pos); printf(FORM_PRINT_SELECTED_VALUES_2, selectedValues[i]->address);
+		pos.y += SPACE_BETWEEN_EDIT_EACHVALUES - 1;
+	}
+}
 /************************************************************************/
 /* Start Message                                                        */
 /*                                                                      */
@@ -168,11 +183,38 @@ void registerMessage(){
 	mainMenu(2);
 
 }
+int selectValueMessage(Value *selectedValues[], int selectedValuesSize){
+	int i;
+	int selectedValueNum;
+	Point pos = { SUBMENU_MAIN_X_POS + INDENT_EACHVALUES, SUBMENU_MAIN_Y_POS + SPACE_BETWEEN_SEARCH_BAR };
+	
+	//각 Value들을 출력
+	printSelectedValue(pos, selectedValues, selectedValuesSize);
+	
+	//Cursor 시작
+	pos.x = SUBMENU_MAIN_X_POS;
+	pos.y = SUBMENU_MAIN_Y_POS + SPACE_BETWEEN_SEARCH_BAR;
+	selectedValueNum = cursorPosVerti(pos, selectedValuesSize, SPACE_BETWEEN_EDIT_EACHVALUES, 0);
+
+	//맨위로 되돌아가서 ERASE.
+	pos.x = SUBMENU_MAIN_X_POS;
+	pos.y = SUBMENU_MAIN_Y_POS + SPACE_BETWEEN_SEARCH_BAR;
+	
+	for (i = 0; i < selectedValuesSize*SPACE_BETWEEN_EDIT_EACHVALUES; i++){
+		gotoxy(pos);
+		printf(ERASE); printf(ERASE); printf(ERASE);
+		pos.y += 1;
+	}
+
+
+	return selectedValueNum;
+}
+
 int deleteMessage(int state){
 	Point pos = { SUBMENU_TEXT_X_POS, SUBMENU_TEXT_Y_POS };
 	system("cls");
 	mainMenu(3);
-	
+	//각 서브메뉴 출력 (ID, 이름, 전화번호, 취소)
 	gotoxy(pos); printf(SUBMENU_1);
 	pos.y += VERTIMOVE_DELETE;
 	gotoxy(pos); printf(SUBMENU_2);
@@ -181,11 +223,13 @@ int deleteMessage(int state){
 	pos.y += VERTIMOVE_DELETE;
 	gotoxy(pos); printf(SUBMENU_4);
 
+	//Cursor 시작
 	pos.x -= SUBMENU_TEXT_X_POS - SUBMENU_CURSOR_X_POS;
 	pos.y -= (MENUSIZE_DELETE - 1) * VERTIMOVE_DELETE;
 
 	state = cursorPosVerti(pos, MENUSIZE_DELETE, VERTIMOVE_DELETE, state);
 
+	//맨위로 복귀후 종료
 	pos.x = SUBMENU_MAIN_X_POS;
 	pos.y = SUBMENU_MAIN_Y_POS;
 	gotoxy(pos);
@@ -196,38 +240,44 @@ int deleteMessage(int state){
 int editValueMessage(void* selectedValue, int state){
 	Point pos = { SUBMENU_MAIN_X_POS, SUBMENU_MAIN_Y_POS };
 
+	//ID출력
 	gotoxy(pos); printf(ERASE);
 	gotoxy(pos); printf(SUBMENU_EDIT_0);
-	pos.y += SPACE_BETWEEN_EDIT_EACHVALUE;
-	pos.x += SPACE_BETWEEN_EDIT_EACHVALUE_INDENT;
+	pos.y += SPACE_BETWEEN_EDIT_EACHVALUEDATA;
+	pos.x += INDENT_EACHVALUEDATA;
 	gotoxy(pos); printf("%d", ((Value*)selectedValue)->key);
-	pos.y += VERTIMOVE_EDITMAIN - SPACE_BETWEEN_EDIT_EACHVALUE;
-	pos.x -= SPACE_BETWEEN_EDIT_EACHVALUE_INDENT;
+	pos.y += VERTIMOVE_EDITMAIN - SPACE_BETWEEN_EDIT_EACHVALUEDATA;
+	pos.x -= INDENT_EACHVALUEDATA;
+	//이름출력
 	gotoxy(pos); printf(SUBMENU_EDIT_1);
-	pos.y += SPACE_BETWEEN_EDIT_EACHVALUE;
-	pos.x += SPACE_BETWEEN_EDIT_EACHVALUE_INDENT;
+	pos.y += SPACE_BETWEEN_EDIT_EACHVALUEDATA;
+	pos.x += INDENT_EACHVALUEDATA;
 	gotoxy(pos); printf("%s", ((Value*)selectedValue)->name);
-	pos.y += VERTIMOVE_EDITMAIN - SPACE_BETWEEN_EDIT_EACHVALUE;
-	pos.x -= SPACE_BETWEEN_EDIT_EACHVALUE_INDENT;
+	pos.y += VERTIMOVE_EDITMAIN - SPACE_BETWEEN_EDIT_EACHVALUEDATA;
+	pos.x -= INDENT_EACHVALUEDATA;
+	//주소출력
 	gotoxy(pos); printf(SUBMENU_EDIT_2);
-	pos.y += SPACE_BETWEEN_EDIT_EACHVALUE;
-	pos.x += SPACE_BETWEEN_EDIT_EACHVALUE_INDENT;
+	pos.y += SPACE_BETWEEN_EDIT_EACHVALUEDATA;
+	pos.x += INDENT_EACHVALUEDATA;
 	gotoxy(pos); printf("%s", ((Value*)selectedValue)->address);
-	pos.y += VERTIMOVE_EDITMAIN - SPACE_BETWEEN_EDIT_EACHVALUE;
-	pos.x -= SPACE_BETWEEN_EDIT_EACHVALUE_INDENT;
+	pos.y += VERTIMOVE_EDITMAIN - SPACE_BETWEEN_EDIT_EACHVALUEDATA;
+	pos.x -= INDENT_EACHVALUEDATA;
+	//전화번호출력
 	gotoxy(pos); printf(SUBMENU_EDIT_3);
-	pos.y += SPACE_BETWEEN_EDIT_EACHVALUE;
-	pos.x += SPACE_BETWEEN_EDIT_EACHVALUE_INDENT;
+	pos.y += SPACE_BETWEEN_EDIT_EACHVALUEDATA;
+	pos.x += INDENT_EACHVALUEDATA;
 	gotoxy(pos); printf("%s", ((Value*)selectedValue)->phone);
-	pos.y += VERTIMOVE_EDITMAIN - SPACE_BETWEEN_EDIT_EACHVALUE;
-	pos.x -= SPACE_BETWEEN_EDIT_EACHVALUE_INDENT;
+	pos.y += VERTIMOVE_EDITMAIN - SPACE_BETWEEN_EDIT_EACHVALUEDATA;
+	pos.x -= INDENT_EACHVALUEDATA;
+	//취소출력
 	gotoxy(pos); printf(SUBMENU_EDIT_4);
 
+	//Cursor 시작
 	pos.x -= SPACE_BETWEEN_CURSOR;
 	pos.y -= (MENUSIZE_EDITMAIN-1) * VERTIMOVE_EDITMAIN;
-
 	state = cursorPosVerti(pos, MENUSIZE_EDITMAIN, VERTIMOVE_EDITMAIN, state);
 
+	//시작점으로 올라간후 리턴.
 	pos.x = SUBMENU_MAIN_X_POS;
 	pos.y = SUBMENU_MAIN_Y_POS;
 	gotoxy(pos);
@@ -235,8 +285,9 @@ int editValueMessage(void* selectedValue, int state){
 	return state;
 }
 void editForm(int state){
-	Point pos = { SUBMENU_MAIN_X_POS + SPACE_BETWEEN_EDIT_EACHVALUE_INDENT, SUBMENU_MAIN_Y_POS
-		+ (state + 1) * VERTIMOVE_EDITMAIN + SPACE_BETWEEN_EDIT_EACHVALUE };
+	//해당 Value Data 위치를 비워준후 커서를 맨앞으로 이동.
+	Point pos = { SUBMENU_MAIN_X_POS + INDENT_EACHVALUEDATA, SUBMENU_MAIN_Y_POS
+		+ (state + 1) * VERTIMOVE_EDITMAIN + SPACE_BETWEEN_EDIT_EACHVALUEDATA };
 	gotoxy(pos); printf(ERASE); printf(ERASE); printf(ERASE);
 	gotoxy(pos);
 }
@@ -245,6 +296,7 @@ int editMessage(int state){
 	system("cls");
 	mainMenu(4);
 
+	//메뉴 출력 (ID, 이름, 전화번호, 취소)
 	gotoxy(pos); printf(SUBMENU_1);
 	pos.y += VERTIMOVE_EDIT;
 	gotoxy(pos); printf(SUBMENU_2);
@@ -253,22 +305,29 @@ int editMessage(int state){
 	pos.y += VERTIMOVE_EDIT;
 	gotoxy(pos); printf(SUBMENU_4);
 
+	//Cursor 시작
 	pos.x -= SUBMENU_TEXT_X_POS - SUBMENU_CURSOR_X_POS;
 	pos.y -= (MENUSIZE_EDIT - 1) * VERTIMOVE_EDIT;
-
 	state = cursorPosVerti(pos, MENUSIZE_EDIT, VERTIMOVE_EDIT, state);
 
+	//맨위로 올린후 리턴.
 	pos.x = SUBMENU_MAIN_X_POS;
 	pos.y = SUBMENU_MAIN_Y_POS;
 	gotoxy(pos);
 
 	return state;
 }
+void printSearchResult(Value* selectedValues[], int selectedValuesSize){
+	Point pos = { SUBMENU_MAIN_X_POS, SUBMENU_MAIN_Y_POS + SPACE_BETWEEN_SEARCH_BAR};
+	printSelectedValue(pos, selectedValues, selectedValuesSize);
+	getchar();
+}
 int searchMessage(int state){
 	Point pos = { SUBMENU_TEXT_X_POS, SUBMENU_TEXT_Y_POS };
 	system("cls");
 	mainMenu(5);
 
+	//메뉴 출력 (ID, 이름, 전화번호, 취소)
 	gotoxy(pos); printf(SUBMENU_1);
 	pos.y += VERTIMOVE_SEARCH;
 	gotoxy(pos); printf(SUBMENU_2);
@@ -277,12 +336,12 @@ int searchMessage(int state){
 	pos.y += VERTIMOVE_SEARCH;
 	gotoxy(pos); printf(SUBMENU_4);
 
+	//Cursor 시작
 	pos.x -= SUBMENU_TEXT_X_POS - SUBMENU_CURSOR_X_POS;
 	pos.y -= (MENUSIZE_SEARCH - 1) * VERTIMOVE_SEARCH;
-
-
 	state = cursorPosVerti(pos, MENUSIZE_SEARCH, VERTIMOVE_SEARCH, state);
 
+	//맨위로 올린후 리턴.
 	pos.x = SUBMENU_MAIN_X_POS;
 	pos.y = SUBMENU_MAIN_Y_POS;
 	gotoxy(pos);
@@ -290,24 +349,92 @@ int searchMessage(int state){
 	return state;
 }
 void saveMessage(){
-	system("cls");
+
+
+	HANDLE hC = GetStdHandle(STD_OUTPUT_HANDLE);
+	CONSOLE_SCREEN_BUFFER_INFO csbi;
+	GetConsoleScreenBufferInfo(hC, &csbi);
+	Point pos = { 0, 22 };
+	int i;
 	mainMenu(6);
+	SetConsoleTextAttribute(hC, 177);
+	gotoxy(pos); for (i = 0; i <= strlen(WIDTHUP); i++){
+		Sleep(animationSleep(i));
+		printf(" ");
+	}
+	pos.x = (strlen(WIDTHUP) - strlen(MESSAGE_SAVE)) / 2; gotoxy(pos); printf(MESSAGE_SAVE);
+	SetConsoleTextAttribute(hC, 7);
+	getchar();
+
 
 }
-void quitMessage(){
+int quitMessage(){
+	Point pos = {(strlen(WIDTHUP) - strlen(MESSAGE_END_BEFORE_SAVE))/2, END_Y_POS};
+	int state;
 	system("cls");
 	mainMenu(7);
-	
-	printCenter("Thanks");
 
+	gotoxy(pos); printf(MESSAGE_END_BEFORE_SAVE);
+	pos.y += 2; 
+	
+
+	pos.x = (strlen(WIDTHUP)  + SPACE_BETWEEN_END_MENU - strlen(ENDMENU_2) -2) / 2; gotoxy(pos);
+	printf(ENDMENU_2);
+	pos.x = strlen(WIDTHUP) / 2 - strlen(ENDMENU_1) - SPACE_BETWEEN_END_MENU / 2; gotoxy(pos);
+	printf(ENDMENU_1);
+
+	pos.y++;
+	state = cursorPosHoriz(pos, MENUSIZE_END, SPACE_BETWEEN_END_MENU, 0);
+
+	return state;
 }
 
 void mismatchmMessage(){
-
-	printf("We can't find");
+	HANDLE hC = GetStdHandle(STD_OUTPUT_HANDLE);
+	CONSOLE_SCREEN_BUFFER_INFO csbi;
+	GetConsoleScreenBufferInfo(hC, &csbi);
+	Point pos = { 0, 23 };
+	int i;
+	SetConsoleTextAttribute(hC, 199);
+	gotoxy(pos); for (i = 0; i <= strlen(WIDTHUP); i++){
+		Sleep(animationSleep(i));  printf(" ");
+	}
+	pos.x = (strlen(WIDTHUP) - strlen(MESSAGE_MISMATCH)) / 2; gotoxy(pos); printf(MESSAGE_MISMATCH);
+	SetConsoleTextAttribute(hC, 7);
 	getchar();
 }
-void invalidInput(){
-	printf("Not good Input. Try again <Enter>");
+void invalidInputMessage(){
+	printf(MESSAGE_INVALIDINPUT);
+	getchar();
+}
+void byeMessage(){
+	HANDLE hC = GetStdHandle(STD_OUTPUT_HANDLE);
+	CONSOLE_SCREEN_BUFFER_INFO csbi;
+	GetConsoleScreenBufferInfo(hC, &csbi);
+	Point pos = { 0, 23 };
+	int i;
+
+	SetConsoleTextAttribute(hC, 241);
+	gotoxy(pos); for (i = 0; i <= strlen(WIDTHUP); i++){
+		Sleep( animationSleep(i) );
+		printf(" ");
+	}
+	pos.x = (strlen(WIDTHUP) - strlen(MESSAGE_BYE)) / 2; gotoxy(pos); printf(MESSAGE_BYE);
+	SetConsoleTextAttribute(hC, 7);
+}
+void removeFinishMessage(){
+	HANDLE hC = GetStdHandle(STD_OUTPUT_HANDLE);
+	CONSOLE_SCREEN_BUFFER_INFO csbi;
+	GetConsoleScreenBufferInfo(hC, &csbi);
+	Point pos = { 0, 23 };
+	int i;
+
+	SetConsoleTextAttribute(hC, 132);
+	gotoxy(pos); for (i = 0; i <= strlen(WIDTHUP); i++){
+		Sleep(animationSleep(i));
+		printf(" ");
+	}
+	pos.x = (strlen(WIDTHUP) - strlen(MESSAGE_REMOVEFINISH)) / 2; gotoxy(pos); printf(MESSAGE_REMOVEFINISH);
+	SetConsoleTextAttribute(hC, 7);
 	getchar();
 }
